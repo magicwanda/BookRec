@@ -1,0 +1,12 @@
+babel
+fastapi
+joblib
+langdetect
+matplotlib
+numpy
+pandas
+requests
+seaborn
+scikit-learn
+streamlit
+scikit-surprise
