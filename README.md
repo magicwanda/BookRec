@@ -14,11 +14,11 @@ The SVD model is too large for the repo. Download it and place it where your cod
 
 ## 🧰 Setup
 
-# install dependencies
-pip install -r requirements.txt
+### install dependencies
+`pip install -r requirements.txt`
 
-# Start the backend (FastAPI + Uvicorn)
-python3 -m uvicorn app:app --reload --port 8000
+### Start the backend (FastAPI + Uvicorn)
+`python3 -m uvicorn app:app --reload --port 8000`
 
-# Start the UI (Streamlit) — in a separate terminal
-python3 -m streamlit run ui.py --server.port 8501
+### Start the UI (Streamlit) — in a separate terminal
+`python3 -m streamlit run ui.py --server.port 8501`
