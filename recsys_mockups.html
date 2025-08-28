@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookScope - Discover Your Next Read</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            gap: 30px;
+            min-height: 100vh;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            z-index: 100;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 20px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 200;
+            display: none;
+            margin-top: 10px;
+        }
+
+        .search-results.visible {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .search-result-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-result-item:hover {
+            background: #f8fafc;
+        }
+
+        .search-result-cover {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 2px;
+        }
+
+        .search-result-author {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .main-content {
+            flex: 1;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 80px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .main-content.with-recommendations {
+            flex: 0.6;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #2d3748;
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .book-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .book-card.expanded {
+            grid-column: 1 / -1;
+            max-width: 800px;
+            margin: 0 auto;
+            transform: scale(1.02);
+            border-color: #667eea;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .book-cover {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .book-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.3;
+            color: #2d3748;
+        }
+
+        .book-author {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .book-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+
+        .stars {
+            color: #fbbf24;
+            font-size: 0.9rem;
+        }
+
+        .rating-text {
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+
+        .book-purchases {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .book-expanded-content {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f7fafc;
+            animation: expandIn 0.4s ease forwards;
+        }
+
+        .book-card.expanded .book-expanded-content {
+            display: block;
+        }
+
+        .book-description {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .book-metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .metadata-item {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metadata-label {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .metadata-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .book-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .book-tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-close {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-close:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+
+        .recommendations-panel {
+            flex: 0.4;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 80px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .recommendations-panel.visible {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .recommendations-header {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f7fafc;
+        }
+
+        .recommendations-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .recommendations-subtitle {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .recommendation-item {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .recommendation-item:hover {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .rec-book-cover {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 6px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .rec-book-info {
+            flex: 1;
+        }
+
+        .rec-book-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #2d3748;
+            font-size: 0.95rem;
+        }
+
+        .rec-book-author {
+            color: #718096;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        .rec-book-match {
+            color: #667eea;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #9ca3af;
+            transition: color 0.3s ease;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-btn:hover {
+            color: #374151;
+            background: #f3f4f6;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes expandIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📚 BookScope</h1>
+        <div class="search-container">
+            <input type="text" class="search-bar" placeholder="Search for any book..." id="searchInput">
+            <button class="search-btn" id="searchButton">🔍</button>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content" id="mainContent">
+            <h2 class="section-title">🏆 Top 10 Most Purchased Books</h2>
+            <div class="books-grid" id="booksGrid">
+                <!-- Books will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="recommendations-panel" id="recommendationsPanel">
+            <button class="close-btn" id="closeBtn">✕</button>
+            <div class="recommendations-header">
+                <h3 class="recommendations-title">Recommended for You</h3>
+                <p class="recommendations-subtitle">Based on readers who also loved <span id="selectedBookTitle"></span></p>
+            </div>
+            <div id="recommendationsList">
+                <!-- Recommendations will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const books = [
+            {
+                title: "The Seven Husbands of Evelyn Hugo",
+                author: "Taylor Jenkins Reid",
+                rating: 4.8,
+                reviews: "124k",
+                purchases: "892k",
+                cover: "📖",
+                gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                description: "A reclusive Hollywood icon finally tells her story to a young journalist.",
+                pages: 400,
+                year: "2017",
+                genre: "Historical Fiction",
+                isbn: "978-1501139239",
+                tags: ["Romance", "Hollywood", "LGBTQ", "Family Saga"]
+            },
+            {
+                title: "Where the Crawdads Sing",
+                author: "Delia Owens",
+                rating: 4.7,
+                reviews: "98k",
+                purchases: "756k",
+                cover: "🦋",
+                gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                description: "A haunting tale of resilience and mystery set in the marshlands of North Carolina.",
+                pages: 384,
+                year: "2018",
+                genre: "Mystery",
+                isbn: "978-0735219090",
+                tags: ["Mystery", "Coming of Age", "Nature", "Romance"]
+            },
+            {
+                title: "Atomic Habits",
+                author: "James Clear",
+                rating: 4.9,
+                reviews: "156k",
+                purchases: "1.2M",
+                cover: "⚛️",
+                gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+                description: "A comprehensive guide to building good habits and breaking bad ones.",
+                pages: 320,
+                year: "2018",
+                genre: "Self-Help",
+                isbn: "978-0735211292",
+                tags: ["Self-Help", "Psychology", "Productivity"]
+            },
+            {
+                title: "The Silent Patient",
+                author: "Alex Michaelides",
+                rating: 4.6,
+                reviews: "87k",
+                purchases: "643k",
+                cover: "🤫",
+                gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+                description: "A psychotherapist becomes obsessed with treating a woman who murdered her husband.",
+                pages: 336,
+                year: "2019",
+                genre: "Thriller",
+                isbn: "978-1250301697",
+                tags: ["Psychological Thriller", "Mystery", "Suspense"]
+            },
+            {
+                title: "Educated",
+                author: "Tara Westover",
+                rating: 4.5,
+                reviews: "203k",
+                purchases: "934k",
+                cover: "🎓",
+                gradient: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+                description: "A powerful memoir about education and the transformative power of learning.",
+                pages: 334,
+                year: "2018",
+                genre: "Memoir",
+                isbn: "978-0399590504",
+                tags: ["Memoir", "Education", "Family", "Resilience"]
+            },
+            {
+                title: "Circe",
+                author: "Madeline Miller",
+                rating: 4.7,
+                reviews: "76k",
+                purchases: "567k",
+                cover: "🏺",
+                gradient: "linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)",
+                description: "A stunning reimagining of Greek mythology following Circe.",
+                pages: 393,
+                year: "2018",
+                genre: "Fantasy",
+                isbn: "978-0316556347",
+                tags: ["Greek Mythology", "Fantasy", "Feminism", "Magic"]
+            },
+            {
+                title: "The Midnight Library",
+                author: "Matt Haig",
+                rating: 4.4,
+                reviews: "145k",
+                purchases: "823k",
+                cover: "📚",
+                gradient: "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)",
+                description: "Between life and death lies the Midnight Library.",
+                pages: 288,
+                year: "2020",
+                genre: "Literary Fiction",
+                isbn: "978-0525559474",
+                tags: ["Philosophy", "Mental Health", "Self-Discovery"]
+            },
+            {
+                title: "Klara and the Sun",
+                author: "Kazuo Ishiguro",
+                rating: 4.3,
+                reviews: "92k",
+                purchases: "445k",
+                cover: "☀️",
+                gradient: "linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%)",
+                description: "A luminous tale told through the eyes of an Artificial Friend.",
+                pages: 303,
+                year: "2021",
+                genre: "Science Fiction",
+                isbn: "978-0571364886",
+                tags: ["Science Fiction", "AI", "Coming of Age"]
+            },
+            {
+                title: "The Song of Achilles",
+                author: "Madeline Miller",
+                rating: 4.8,
+                reviews: "134k",
+                purchases: "789k",
+                cover: "⚔️",
+                gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                description: "A breathtaking retelling of the Iliad.",
+                pages: 416,
+                year: "2011",
+                genre: "Historical Fiction",
+                isbn: "978-0062060624",
+                tags: ["Greek Mythology", "LGBTQ", "Romance", "War"]
+            },
+            {
+                title: "Project Hail Mary",
+                author: "Andy Weir",
+                rating: 4.9,
+                reviews: "87k",
+                purchases: "523k",
+                cover: "🚀",
+                gradient: "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
+                description: "A thrilling hard science fiction novel about saving humanity.",
+                pages: 496,
+                year: "2021",
+                genre: "Science Fiction",
+                isbn: "978-0593135204",
+                tags: ["Hard Sci-Fi", "Space", "Humor", "Friendship"]
+            }
+        ];
+
+        const recommendations = {
+            0: [
+                { title: "Daisy Jones & The Six", author: "Taylor Jenkins Reid", match: "96% match", cover: "🎸" },
+                { title: "The Paris Wife", author: "Paula McLain", match: "89% match", cover: "🗼" },
+                { title: "Big Little Lies", author: "Liane Moriarty", match: "87% match", cover: "🏠" },
+                { title: "Eleanor Oliphant Is Completely Fine", author: "Gail Honeyman", match: "84% match", cover: "🌻" },
+                { title: "Little Fires Everywhere", author: "Celeste Ng", match: "82% match", cover: "🔥" }
+            ],
+            1: [
+                { title: "The Great Alone", author: "Kristin Hannah", match: "91% match", cover: "🏔️" },
+                { title: "Becoming", author: "Michelle Obama", match: "87% match", cover: "👑" },
+                { title: "The Nightingale", author: "Kristin Hannah", match: "85% match", cover: "🕊️" },
+                { title: "Educated", author: "Tara Westover", match: "83% match", cover: "📖" },
+                { title: "The Tattooist of Auschwitz", author: "Heather Morris", match: "80% match", cover: "💔" }
+            ],
+            2: [
+                { title: "The 7 Habits of Highly Effective People", author: "Stephen Covey", match: "93% match", cover: "📈" },
+                { title: "Think and Grow Rich", author: "Napoleon Hill", match: "88% match", cover: "💰" },
+                { title: "The Power of Now", author: "Eckhart Tolle", match: "85% match", cover: "🧘" },
+                { title: "Deep Work", author: "Cal Newport", match: "83% match", cover: "🎯" },
+                { title: "Mindset", author: "Carol Dweck", match: "81% match", cover: "🧠" }
+            ],
+            3: [
+                { title: "Gone Girl", author: "Gillian Flynn", match: "92% match", cover: "👥" },
+                { title: "The Girl with the Dragon Tattoo", author: "Stieg Larsson", match: "88% match", cover: "🐉" },
+                { title: "Sharp Objects", author: "Gillian Flynn", match: "86% match", cover: "🔪" },
+                { title: "The Woman in the Window", author: "A.J. Finn", match: "84% match", cover: "🪟" },
+                { title: "Big Little Lies", author: "Liane Moriarty", match: "82% match", cover: "🏠" }
+            ],
+            4: [
+                { title: "Becoming", author: "Michelle Obama", match: "89% match", cover: "👑" },
+                { title: "Wild", author: "Cheryl Strayed", match: "87% match", cover: "🏃‍♀️" },
+                { title: "The Glass Castle", author: "Jeannette Walls", match: "85% match", cover: "🏰" },
+                { title: "Born a Crime", author: "Trevor Noah", match: "83% match", cover: "😄" },
+                { title: "When Breath Becomes Air", author: "Paul Kalanithi", match: "81% match", cover: "🫁" }
+            ]
+        };
+
+        const searchDatabase = [
+            { title: "The Hobbit", author: "J.R.R. Tolkien", cover: "🧙‍♂️", genre: "Fantasy" },
+            { title: "1984", author: "George Orwell", cover: "👁️", genre: "Dystopian Fiction" },
+            { title: "Harry Potter and the Sorcerer's Stone", author: "J.K. Rowling", cover: "⚡", genre: "Fantasy" },
+            { title: "Pride and Prejudice", author: "Jane Austen", cover: "💕", genre: "Romance" },
+            { title: "The Great Gatsby", author: "F. Scott Fitzgerald", cover: "🥂", genre: "Classic Fiction" }
+        ];
+
+        function createStars(rating) {
+            const fullStars = Math.floor(rating);
+            let stars = '';
+            for (let i = 0; i < fullStars; i++) {
+                stars += '★';
+            }
+            if (rating % 1 !== 0) {
+                stars += '☆';
+            }
+            return stars;
+        }
+
+        function renderBooks() {
+            const grid = document.getElementById('booksGrid');
+            grid.innerHTML = '';
+
+            books.forEach((book, index) => {
+                const bookCard = document.createElement('div');
+                bookCard.className = 'book-card';
+                bookCard.innerHTML = `
+                    <div class="book-cover" style="background: ${book.gradient}">
+                        ${book.cover}
+                    </div>
+                    <h3 class="book-title">${book.title}</h3>
+                    <p class="book-author">by ${book.author}</p>
+                    <div class="book-rating">
+                        <span class="stars">${createStars(book.rating)}</span>
+                        <span class="rating-text">${book.rating} (${book.reviews})</span>
+                    </div>
+                    <div class="book-purchases">${book.purchases} sold</div>
+                    
+                    <div class="book-expanded-content">
+                        <p class="book-description">${book.description}</p>
+                        
+                        <div class="book-metadata">
+                            <div class="metadata-item">
+                                <div class="metadata-label">Pages</div>
+                                <div class="metadata-value">${book.pages}</div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-label">Year</div>
+                                <div class="metadata-value">${book.year}</div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-label">Genre</div>
+                                <div class="metadata-value">${book.genre}</div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-label">ISBN</div>
+                                <div class="metadata-value">${book.isbn}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="book-tags">
+                            ${book.tags.map(tag => `<span class="book-tag">${tag}</span>`).join('')}
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" data-action="wishlist">
+                                ❤️ Add to Wishlist
+                            </button>
+                            <button class="btn btn-close" data-action="close">
+                                ✕ Close
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                bookCard.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn')) {
+                        const action = e.target.closest('.btn').dataset.action;
+                        if (action === 'wishlist') {
+                            addToWishlist(index);
+                        } else if (action === 'close') {
+                            collapseBook(index);
+                        }
+                        return;
+                    }
+                    expandBook(index, bookCard);
+                });
+
+                grid.appendChild(bookCard);
+            });
+        }
+
+        function expandBook(bookIndex, bookCard) {
+            document.querySelectorAll('.book-card').forEach((card, index) => {
+                if (index !== bookIndex) {
+                    card.classList.remove('expanded');
+                }
+            });
+
+            const wasExpanded = bookCard.classList.contains('expanded');
+            bookCard.classList.toggle('expanded');
+
+            if (bookCard.classList.contains('expanded')) {
+                showRecommendations(bookIndex, books[bookIndex]);
+                setTimeout(() => {
+                    bookCard.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }, 200);
+            } else {
+                closeRecommendations();
+            }
+        }
+
+        function collapseBook(bookIndex) {
+            document.querySelectorAll('.book-card')[bookIndex].classList.remove('expanded');
+            closeRecommendations();
+        }
+
+        function addToWishlist(bookIndex) {
+            const book = books[bookIndex];
+            
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.innerHTML = `📚 "${book.title}" added to wishlist!`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function showRecommendations(bookIndex, book) {
+            const panel = document.getElementById('recommendationsPanel');
+            const mainContent = document.getElementById('mainContent');
+            
+            mainContent.classList.add('with-recommendations');
+            panel.classList.add('visible');
+
+            document.getElementById('selectedBookTitle').textContent = book.title;
+
+            renderRecommendations(bookIndex);
+        }
+
+        function renderRecommendations(bookIndex) {
+            const container = document.getElementById('recommendationsList');
+            const recs = recommendations[bookIndex] || recommendations[0];
+
+            container.innerHTML = '';
+
+            recs.forEach((rec, index) => {
+                const recItem = document.createElement('div');
+                recItem.className = 'recommendation-item';
+                recItem.style.opacity = '0';
+                recItem.innerHTML = `
+                    <div class="rec-book-cover">
+                        ${rec.cover}
+                    </div>
+                    <div class="rec-book-info">
+                        <h4 class="rec-book-title">${rec.title}</h4>
+                        <p class="rec-book-author">by ${rec.author}</p>
+                        <p class="rec-book-match">${rec.match}</p>
+                    </div>
+                `;
+
+                container.appendChild(recItem);
+
+                setTimeout(() => {
+                    recItem.style.opacity = '1';
+                }, index * 100);
+            });
+        }
+
+        function closeRecommendations() {
+            const panel = document.getElementById('recommendationsPanel');
+            const mainContent = document.getElementById('mainContent');
+            
+            panel.classList.remove('visible');
+            mainContent.classList.remove('with-recommendations');
+            
+            document.querySelectorAll('.book-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+        }
+
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchButton = document.getElementById('searchButton');
+            const searchResults = document.getElementById('searchResults');
+
+            searchInput.addEventListener('input', handleSearch);
+            searchButton.addEventListener('click', () => {
+                if (searchInput.value.trim()) {
+                    handleSearch();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-container')) {
+                    searchResults.classList.remove('visible');
+                }
+            });
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const searchResults = document.getElementById('searchResults');
+
+            if (query.length < 2) {
+                searchResults.classList.remove('visible');
+                return;
+            }
+
+            const results = searchDatabase.filter(book => 
+                book.title.toLowerCase().includes(query) || 
+                book.author.toLowerCase().includes(query)
+            );
+
+            renderSearchResults(results, query);
+        }
+
+        function renderSearchResults(results, query) {
+            const searchResults = document.getElementById('searchResults');
+            
+            if (results.length === 0) {
+                searchResults.innerHTML = `
+                    <div class="search-result-item" style="text-align: center; color: #718096;">
+                        No books found. Try a different search term.
+                    </div>
+                `;
+            } else {
+                searchResults.innerHTML = results.map((book, index) => `
+                    <div class="search-result-item" data-index="${index}">
+                        <div class="search-result-cover">${book.cover}</div>
+                        <div class="search-result-info">
+                            <div class="search-result-title">${book.title}</div>
+                            <div class="search-result-author">by ${book.author}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            searchResults.classList.add('visible');
+            
+            // Add click listeners to search results
+            searchResults.querySelectorAll('.search-result-item').forEach((item, index) => {
+                if (results[index]) {
+                    item.addEventListener('click', () => {
+                        selectSearchedBook(results[index]);
+                    });
+                }
+            });
+        }
+
+        function selectSearchedBook(book) {
+            document.getElementById('searchResults').classList.remove('visible');
+            document.getElementById('searchInput').value = '';
+            
+            // Show a simple notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.innerHTML = `📚 Found "${book.title}"! Check our recommendations.`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Event listeners
+        document.getElementById('closeBtn').addEventListener('click', closeRecommendations);
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            renderBooks();
+            initializeSearch();
+        });
+
+        // Fallback initialization
+        if (document.readyState !== 'loading') {
+            renderBooks();
+            initializeSearch();
+        }
+    </script>
+</body>
+</html>
